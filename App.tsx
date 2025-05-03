@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { TouchableOpacity, StyleSheet, Text, TextInput, View, ScrollView  } from 'react-native';
+import { TouchableOpacity, StyleSheet, Text, TextInput, View, ScrollView } from 'react-native';
 import { calculateExercise, ExerciseResult } from './src/utils/calculateExercise';
 
 export default function App() {
-  const [hours, setHours] = useState<string[]>(Array(7).fill(''));
+  const [daysInput, setDaysInput] = useState<string>('7');
+  const [daysCount, setDaysCount] = useState<number | null>(null);
+  const [hours, setHours] = useState<string[]>([]);
   const [goal, setGoal] = useState<string>('1.5');
   const [result, setResult] = useState<ExerciseResult | null>(null);
 
+  // Al confirmar la cantidad de días, inicializamos el array de horas
+  const handleConfirmDays = () => {
+    const n = parseInt(daysInput, 10);
+    if (isNaN(n) || n < 1 || n > 7) {
+      return alert('Por favor ingresa un número entre 1 y 7.');
+    }
+    setDaysCount(n);
+    setHours(Array(n).fill(''));
+    setResult(null);
+  };
+
   const handleHourChange = (index: number, value: string) => {
+    if (daysCount === null) return;
     const newHours = [...hours];
     newHours[index] = value;
     setHours(newHours);
@@ -23,39 +37,61 @@ export default function App() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Introduzca las horas de ejercicio para cada día:</Text>
-      {hours.map((hour, index) => (
-        <TextInput
-          key={index}
-          style={styles.input}
-          placeholder={`Day ${index + 1}`}
-          keyboardType="numeric"
-          value={hour}
-          onChangeText={(value) => handleHourChange(index, value)}
-        />
-      ))}
+      {/* Paso 1: Preguntar cuántos días */}
+      {daysCount === null ? (
+        <View style={styles.stepContainer}>
+          <Text style={styles.title}>¿Cuántos días entrenarás? (1–7)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ej. 5"
+            keyboardType="numeric"
+            value={daysInput}
+            onChangeText={setDaysInput}
+          />
+          <TouchableOpacity style={styles.button} onPress={handleConfirmDays}>
+            <Text style={styles.buttonText}>Confirmar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {/* Paso 2: Ingresar horas y objetivo */}
+          <Text style={styles.title}>Horas de ejercicio para cada uno de los {daysCount} días:</Text>
+          {hours.map((hour, index) => (
+            <TextInput
+              key={index}
+              style={styles.input}
+              placeholder={`Día ${index + 1}`}
+              keyboardType="numeric"
+              value={hour}
+              onChangeText={value => handleHourChange(index, value)}
+            />
+          ))}
 
-      <Text style={styles.label}>Objetivo diario (horas):</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="numeric"
-        placeholder="Goal"
-        value={goal}
-        onChangeText={setGoal}
-      />
+          <Text style={styles.label}>Objetivo diario (horas):</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder="Ej. 2"
+            value={goal}
+            onChangeText={setGoal}
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleCalculate}>
-        <Text style={styles.buttonText}>Calcular Ejercicio</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleCalculate}>
+            <Text style={styles.buttonText}>Calcular Ejercicio</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
+      {/* Paso 3: Mostrar resultado */}
       {result && (
         <View style={styles.resultContainer}>
-          <Text style={styles.text}>Total de días: {result.totalDays}</Text>
-          <Text style={styles.text}>Días entrenados: {result.trainedDays}</Text>
-          <Text style={styles.text}>Promedio: {result.average} hours</Text>
-          <Text style={styles.text}>¿Cumpliste la meta? {result.success}</Text>
+          <Text style={styles.text}>Total de días: {result.periodLength}</Text>
+          <Text style={styles.text}>Días entrenados: {result.trainingDays}</Text>
+          <Text style={styles.text}>Meta diaria: {result.target} horas</Text>
+          <Text style={styles.text}>¿Cumpliste la meta? {result.success ? 'Sí' : 'No'}</Text>
+          <Text style={styles.text}>Promedio: {result.average} horas</Text>
           <Text style={styles.text}>Valoración: {result.rating}</Text>
-          <Text style={styles.text}>{result.message}</Text>
+          <Text style={styles.text}>{result.ratingDescription}</Text>
         </View>
       )}
 
@@ -67,38 +103,43 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#292726',  
+    backgroundColor: '#292726',
     padding: 25,
     paddingTop: 60,
+    alignItems: 'center',
+  },
+  stepContainer: {
+    width: '100%',
     alignItems: 'center',
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#ffffff',  
+    color: '#ffffff',
     marginBottom: 20,
+    textAlign: 'center',
   },
   label: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#ffffff',  
+    color: '#ffffff',
     marginTop: 25,
   },
   input: {
-    width: '25%',
+    width: '60%',
     borderWidth: 2,
     borderColor: '#ddd',
     paddingVertical: 12,
     paddingHorizontal: 15,
     marginVertical: 10,
-    borderRadius: 50, 
+    borderRadius: 50,
     backgroundColor: '#fff',
     fontSize: 16,
-    color: '#333',  
+    color: '#333',
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,  
+    shadowRadius: 5,
   },
   resultContainer: {
     marginTop: 40,
@@ -106,11 +147,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 30,
     backgroundColor: '#fff',
-    borderRadius: 15,  
+    borderRadius: 15,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,  
+    shadowRadius: 8,
   },
   text: {
     fontSize: 18,
@@ -119,7 +160,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#FFFFFF', 
+    backgroundColor: '#FFFFFF',
     padding: 15,
     borderRadius: 50,
     borderWidth: 1,
@@ -128,7 +169,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   buttonText: {
-    color: '#000000', 
+    color: '#000000',
     fontSize: 16,
   },
 });

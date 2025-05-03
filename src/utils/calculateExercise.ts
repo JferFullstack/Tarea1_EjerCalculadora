@@ -1,41 +1,44 @@
 export interface ExerciseResult {
-  totalDays: number;
-  trainedDays: number;
-  average: string;
-  success: string;
+  periodLength: number;
+  trainingDays: number;
+  success: boolean;
   rating: number;
-  message: string;
+  ratingDescription: string;
+  target: number;
+  average: number;
 }
 
-export function calculateExercise(hours: number[], goal: number): ExerciseResult {
-  let trainedDays = 0;
-  let totalHours = 0;
+export function calculateExercise(hours: number[], target: number): ExerciseResult {
+  const periodLength = hours.length;
+  const trainingDays = hours.filter(h => h > 0).length;
+  const totalHours = hours.reduce((sum, h) => sum + h, 0);
+  const average = totalHours / periodLength;
+  const success = average >= target;
 
-  for (let i = 0; i < hours.length; i++) {
-    if (hours[i] > 0) trainedDays++;
-    totalHours += hours[i];
-  }
+  // Evaluar porcentaje de cumplimiento
+  const percentageOfGoal = average / target;
 
-  const average = totalHours / hours.length;
-  const success = average >= goal;
+  let rating: number;
+  let ratingDescription: string;
 
-  let rating = 1;
-  let message = 'You need to improve your exercise hours.';
-
-  if (average >= goal) {
+  if (percentageOfGoal >= 1) {
     rating = 3;
-    message = 'Excellent! You have exceeded your goal.';
-  } else if (average >= goal * 0.75) {
+    ratingDescription = 'Excelente! Sobrepasaste tu meta.';
+  } else if (percentageOfGoal >= 0.75) {
     rating = 2;
-    message = 'Not bad, but it could be better.';
+    ratingDescription = 'No está mal, pero podrías mejorar.';
+  } else {
+    rating = 1;
+    ratingDescription = 'Necesitas mejorar tus horas de ejercicio';
   }
 
   return {
-    totalDays: hours.length,
-    trainedDays: trainedDays,
-    average: average.toFixed(2),
-    success: success ? 'Yes' : 'No',
+    periodLength,
+    trainingDays,
+    success,
     rating,
-    message,
+    ratingDescription,
+    target,
+    average,
   };
 }
