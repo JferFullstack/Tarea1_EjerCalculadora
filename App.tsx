@@ -1,59 +1,61 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet, Text, TextInput, View, ScrollView  } from 'react-native';
-import { calcularEjercicio, ResultadoEjercicio } from './src/utils/calcularEjercicios';
+import { TouchableOpacity, StyleSheet, Text, TextInput, View, ScrollView  } from 'react-native';
+import { calculateExercise, ExerciseResult } from './src/utils/calculateExercise';
 
 export default function App() {
-  const [horas, setHoras] = useState<string[]>(Array(7).fill(''));
-  const [meta, setMeta] = useState<string>('2');
-  const [resultado, setResultado] = useState<ResultadoEjercicio | null>(null);
+  const [hours, setHours] = useState<string[]>(Array(7).fill(''));
+  const [goal, setGoal] = useState<string>('1.5');
+  const [result, setResult] = useState<ExerciseResult | null>(null);
 
-  const handleCambioHora = (index: number, valor: string) => {
-    const nuevasHoras = [...horas];
-    nuevasHoras[index] = valor;
-    setHoras(nuevasHoras);
+  const handleHourChange = (index: number, value: string) => {
+    const newHours = [...hours];
+    newHours[index] = value;
+    setHours(newHours);
   };
 
-  const handleCalcular = () => {
-    const horasNumericas = horas.map(h => parseFloat(h) || 0);
-    const metaNumerica = parseFloat(meta) || 0;
-    const resultadoFinal = calcularEjercicio(horasNumericas, metaNumerica);
-    setResultado(resultadoFinal);
+  const handleCalculate = () => {
+    const numericHours = hours.map(h => parseFloat(h) || 0);
+    const numericGoal = parseFloat(goal) || 0;
+    const finalResult = calculateExercise(numericHours, numericGoal);
+    setResult(finalResult);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Ingresa las horas de ejercicio de cada día:</Text>
-      {horas.map((hora, index) => (
+      <Text style={styles.title}>Introduzca las horas de ejercicio para cada día:</Text>
+      {hours.map((hour, index) => (
         <TextInput
           key={index}
           style={styles.input}
-          placeholder={`Día ${index + 1}`}
+          placeholder={`Day ${index + 1}`}
           keyboardType="numeric"
-          value={hora}
-          onChangeText={(valor) => handleCambioHora(index, valor)}
+          value={hour}
+          onChangeText={(value) => handleHourChange(index, value)}
         />
       ))}
 
-      <Text style={styles.label}>Meta diaria (horas):</Text>
+      <Text style={styles.label}>Objetivo diario (horas):</Text>
       <TextInput
         style={styles.input}
         keyboardType="numeric"
-        placeholder="Meta"
-        value={meta}
-        onChangeText={setMeta}
+        placeholder="Goal"
+        value={goal}
+        onChangeText={setGoal}
       />
 
-      <Button title="Calcular Ejercicio" onPress={handleCalcular} />
+      <TouchableOpacity style={styles.button} onPress={handleCalculate}>
+        <Text style={styles.buttonText}>Calcular Ejercicio</Text>
+      </TouchableOpacity>
 
-      {resultado && (
+      {result && (
         <View style={styles.resultContainer}>
-          <Text style={styles.text}>Días totales: {resultado.diasTotales}</Text>
-          <Text style={styles.text}>Días entrenados: {resultado.diasEntrenados}</Text>
-          <Text style={styles.text}>Promedio: {resultado.promedio} horas</Text>
-          <Text style={styles.text}>¿Cumpliste la meta?: {resultado.exito}</Text>
-          <Text style={styles.text}>Calificación: {resultado.calificacion}</Text>
-          <Text style={styles.text}>{resultado.mensaje}</Text>
+          <Text style={styles.text}>Total de días: {result.totalDays}</Text>
+          <Text style={styles.text}>Días entrenados: {result.trainedDays}</Text>
+          <Text style={styles.text}>Promedio: {result.average} hours</Text>
+          <Text style={styles.text}>¿Cumpliste la meta? {result.success}</Text>
+          <Text style={styles.text}>Valoración: {result.rating}</Text>
+          <Text style={styles.text}>{result.message}</Text>
         </View>
       )}
 
@@ -65,35 +67,68 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#292726',  
+    padding: 25,
+    paddingTop: 60,
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 50,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#ffffff',  
+    marginBottom: 20,
   },
   label: {
-    marginTop: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#ffffff',  
+    marginTop: 25,
   },
   input: {
-    width: '80%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 8,
-    textAlign: 'center',
+    width: '25%',
+    borderWidth: 2,
+    borderColor: '#ddd',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginVertical: 10,
+    borderRadius: 50, 
+    backgroundColor: '#fff',
+    fontSize: 16,
+    color: '#333',  
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,  
   },
   resultContainer: {
-    marginTop: 30,
+    marginTop: 40,
     alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    backgroundColor: '#fff',
+    borderRadius: 15,  
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,  
   },
   text: {
+    fontSize: 18,
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#FFFFFF', 
+    padding: 15,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#000000', 
     fontSize: 16,
-    marginBottom: 5,
   },
 });
